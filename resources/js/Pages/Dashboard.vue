@@ -1,7 +1,6 @@
 <template>
-
-    <div>
-        <!-- <audio :src="songs[0].src" controls id="audio"></audio> -->
+    <div id="bg" class="animateHue">
+        <img :src="currentSong.cover" class="opacity-25 w-full h-full" :alt="currentSong.title">
         <div>
             <button type="button" @click="prev">Prev</button>
             <button type="button" @click="pause" v-if="isPlaying">Pause</button>
@@ -14,10 +13,7 @@
                 <span>{{ song.artist }}</span>
             </button>
         </div>
-
     </div>
-
-
 </template>
 
 <script>
@@ -32,22 +28,26 @@
                     {
                         title: 'Bella Bella Beat',
                         artist: 'Nana Kwabena',
-                        src: '/storage/audio/Bella Bella Beat.mp3'
+                        src: '/storage/audio/Bella Bella Beat.mp3',
+                        cover: '/storage/images/dj2.jpg',
                     },
                     {
                         title: 'Breatha',
                         artist: 'Josh Pan',
-                        src: '/storage/audio/Breatha.mp3'
+                        src: '/storage/audio/Breatha.mp3',
+                        cover: '/storage/images/dj3.jpg',
                     },
                     {
                         title: 'Forever',
                         artist: 'Anno Domini Beats',
-                        src: '/storage/audio/Forever.mp3'
+                        src: '/storage/audio/Forever.mp3',
+                        cover: '/storage/images/dj4.jpg',
                     },
                     {
                         title: 'Yah Yah',
                         artist: 'Josh Pan',
-                        src: '/storage/audio/Yah Yah.mp3'
+                        src: '/storage/audio/Yah Yah.mp3',
+                        cover: '/storage/images/dj.jpg',
                     },
                 ],
             }
@@ -55,7 +55,6 @@
         mounted() {
             this.currentSong = this.songs[this.index]
             this.audio.src = this.currentSong.src
-            console.log(this.audio)
         },
         methods: {
             play(song) {
@@ -87,6 +86,5 @@
                 this.play(this.currentSong)
             }
         }
-
     }
 </script>
