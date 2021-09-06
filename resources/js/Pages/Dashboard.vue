@@ -37,14 +37,14 @@
                             </div>
                             <div class="flex flex-col mt-4 w-full">
                                 <div class="flex flex-1 items-center space-x-1">
-                                    Mute
-                                    <input type="range" min="0" max="100" step="1" id="volume" class="cursor-pointer">
-                                    Max
+                                    <icon name="volume-mute" class="w-4 h-4 fill-current cursor-pointer hover:text-blue-600" :class="isMuted ? 'text-blue-600' : ''" @click="mute"></icon>
+                                    <input type="range" min="0" max="100" step="1" v-model="volume" class="cursor-pointer" @input="updateVolume">
+                                    <icon name="volume-up" class="w-4 h-4 fill-current cursor-pointer hover:text-blue-600" :class="isMaxed ? 'text-blue-600' : ''" @click="max"></icon>
                                 </div>
                                 <div class="flex flex-1 flex-col items-center space-x-1 mt-4">
-                                    <input type="range" max="100"  id="progressBar" class="cursor-pointer">
+                                    <input type="range" max="100" id="progressBar" v-model="audio.currentTime" class="cursor-pointer">
                                     <div class="flex justify-between">
-                                        <span>0:00 / 2:43</span>
+                                        <span>{{ currentTimeTxt }} / {{ currentDurationTxt }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -62,7 +62,15 @@
             return {
                 audio: new Audio(),
                 currentSong: {},
+                progressBar: {},
+                currentDuration: 0,
+                currentTime: 0,
+                currentTimeTxt: '0:00',
+                currentDurationTxt: '0:00',
                 index: 0,
+                volume: 20,
+                isMuted: false,
+                isMaxed: false,
                 isPlaying: false,
                 songs: [
                     {
@@ -95,8 +103,53 @@
         mounted() {
             this.currentSong = this.songs[this.index]
             this.audio.src = this.currentSong.src
+            this.audio.volume = this.volume / 100
+            this.progressBar = document.querySelector('#progressBar')
+            this.progressBar.value = 0
+            this.initProgress()
         },
         methods: {
+            initProgress() {
+                this.audio.addEventListener('loadedmetadata', () => {
+                    this.currentDuration = this.audio.duration
+                    let secs = `${parseInt(`${this.currentDuration % 60}`, 10)}`.padStart(2,'0')
+                    let mins = parseInt(`${(this.currentDuration/60) % 60}`, 10)
+                    this.currentDurationTxt = `${mins}:${secs}`
+                    this.progressBar.max = this.currentDuration
+                })
+                this.audio.addEventListener('timeupdate', () => {
+                    this.updateProgress(this.audio.currentTime)
+                })
+            },
+            updateProgress(time) {
+                this.progressBar.value = time
+                let secs = `${parseInt(`${time % 60}`, 10)}`.padStart(2,'0')
+                let mins = parseInt(`${(time/60) % 60}`, 10)
+                this.currentTimeTxt = `${mins}:${secs}`
+            },
+            updateVolume() {
+                this.audio.volume = this.volume / 100
+                this.isMuted = false
+                if(this.volume >= 100) {
+                    this.isMaxed = true
+                    this.isMuted = false
+                } else if(this.volume <= 0) {
+                    this.isMaxed = false
+                    this.isMuted = true
+                }
+            },
+            mute() {
+                this.isMuted = true
+                this.isMaxed = false
+                this.volume = 0
+                this.audio.volume = 0
+            },
+            max() {
+                this.isMaxed = true
+                this.isMuted = false
+                this.volume = 100
+                this.audio.volume = this.volume / 100
+            },
             play(song) {
                 if(typeof song.src != 'undefined') {
                     this.currentSong = song
