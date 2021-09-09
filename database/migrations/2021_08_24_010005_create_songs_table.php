@@ -15,6 +15,10 @@ class CreateSongsTable extends Migration
     {
         Schema::create('songs', function (Blueprint $table) {
             $table->id();
+            $table->string('title');
+            $table->string('artist');
+            $table->string('src');
+            $table->string('cover')->default('images/defaults/ad_1.png');
             $table->timestamps();
         });
     }

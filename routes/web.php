@@ -15,3 +15,4 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [SongController::class, 'index']);
+Route::post('/', [SongController::class, 'store'])->name('song.store');
