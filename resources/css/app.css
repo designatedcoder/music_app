@@ -33,3 +33,8 @@
     -webkit-animation-delay: 1s;
     -webkit-animation-iteration-count: infinite;
 }
+
+.active {
+    color: blue;
+    background-color: rgb(209, 203, 219);
+}

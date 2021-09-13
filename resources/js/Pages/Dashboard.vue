@@ -2,11 +2,11 @@
     <div id="bg" class="animateHue">
         <img :src="'/storage/'+currentSong.cover" class="opacity-25 w-full h-full" :alt="currentSong.title">
         <div class="absolute inset-0">
-            <div class="flex h-full md:items-center md:mx-auto md:w-3/4 lg:w-1/2">
+            <div class="flex h-full md:items-center md:mx-auto md:w-3/4">
                 <div class="hidden md:flex md:flex-col md:flex-1 md:space-y-3 md:relative md:z-10">
                     <h1 class="text-xl text-white font-semibold md:text-2xl">All Songs</h1>
                     <div class="border-2 h-64 overflow-y-auto">
-                        <button class="flex flex-col border-b text-white px-2 py-2 w-full transition hover:text-blue-700" v-for="(song, index) in songs" :key="index" @click="play(song)">
+                        <button class="flex flex-col border-b text-white px-2 py-2 w-full transition hover:text-blue-700 hover:bg-gray-300" :class="{ active: song === activeItem}" v-for="(song, index) in songs" :key="index" @click="play(song)">
                             <span class="font-semibold italic">{{ song.title }}</span>
                             <span>{{ song.artist }}</span>
                         </button>
@@ -96,6 +96,17 @@
                 isMaxed: false,
                 isPlaying: false,
                 isFormOpen: false,
+                activeItem: null,
+                intialized: false,
+                audioSource: {},
+                analyser: {},
+                bufferLength: {},
+                canvas: {},
+                ctx: {},
+                dataArray: [],
+                barWidth: 0,
+                barHeight: 0,
+                x: 0,
                 form: this.$inertia.form({
                     title: '',
                     artist: '',
@@ -106,13 +117,31 @@
         },
         mounted() {
             this.currentSong = this.songs[this.index]
+            this.activeItem = this.songs[this.index]
             this.audio.src = '/storage/'+this.currentSong.src
             this.audio.volume = this.volume / 100
             this.progressBar = document.querySelector('#progressBar')
             this.progressBar.value = 0
+            this.canvas = document.querySelector('#canvas')
+            this.ctx = canvas.getContext('2d')
+            this.canvas.width = window.innerWidth
+            this.canvas.height = window.innerHeight
             this.initProgress()
         },
         methods: {
+            initPlayer() {
+                if(this.initialized) return
+                this.initialized = true
+                this.audioCtx = new(AudioContext || webkitAudioContext)()
+                this.audioSource = this.audioCtx.createMediaElementSource(this.audio)
+                this.analyser = this.audioCtx.createAnalyser()
+                this.audioSource.connect(this.analyser)
+                this.analyser.connect(this.audioCtx.destination)
+                this.analyser.fftSize = 512
+                this.bufferLength = this.analyser.frequencyBinCount
+                this.dataArray = new Uint8Array(this.bufferLength)
+                this.barWidth = 5
+            },
             uploadSong(e) {
                 let file = e.target.files[0]
                 let reader = new FileReader()
@@ -180,12 +209,15 @@
                 this.audio.volume = this.volume / 100
             },
             play(song) {
+                this.initPlayer()
                 if(typeof song.src != 'undefined') {
                     this.currentSong = song
                     this.audio.src = '/storage/'+this.currentSong.src
                 }
                 this.audio.play()
                 this.isPlaying = true
+                this.activeItem = this.currentSong
+                this.animate()
             },
             pause() {
                 this.audio.pause()
@@ -206,6 +238,20 @@
                 }
                 this.currentSong = this.songs[this.index]
                 this.play(this.currentSong)
+            },
+            animate() {
+                this.x = 0
+                this.ctx.clearRect(0,0, this.canvas.width, this.canvas.height)
+                this.analyser.getByteFrequencyData(this.dataArray)
+
+                for (let i = 0; i < this.bufferLength; i++) {
+                    this.barHeight = this.dataArray[i]
+                    let hue = i * 15
+                    this.ctx.fillStyle = 'hsl('+hue+',100%, 50%)'
+                    this.ctx.fillRect(this.x, this.canvas.height - this.barHeight, this.barWidth, this.barHeight)
+                    this.x += this.barWidth + 4
+                }
+                requestAnimationFrame(this.animate)
             }
         }
     }
